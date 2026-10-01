@@ -451,7 +451,14 @@ export class ArrClient {
       throw new Error(`${this.serviceName} API error: ${response.status} ${response.statusText} - ${text}`);
     }
 
-    return response.json() as Promise<T>;
+    // DELETE (and some other) endpoints return 200/204 with an empty body --
+    // response.json() throws "Unexpected end of JSON input" on that, so check
+    // for actual content first rather than assuming every success response is JSON.
+    const text = await response.text();
+    if (!text) {
+      return undefined as T;
+    }
+    return JSON.parse(text) as T;
   }
 
   /**
