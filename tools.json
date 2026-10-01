@@ -153,6 +153,20 @@
     }
   },
   {
+    "name": "sonarr_delete_episode_file",
+    "description": "Permanently delete a single episode's file from disk (e.g. a wrongly-matched or corrupt download), without removing the series or episode entry from Sonarr. The episode reverts to missing/monitored so it can be re-grabbed with sonarr_search_episode. Use sonarr_get_episodes to find the episodeFileId. This cannot be undone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "episodeFileId": {
+          "type": "number",
+          "description": "Episode file ID to delete (the episodeFileId field from sonarr_get_episodes)"
+        }
+      },
+      "required": ["episodeFileId"]
+    }
+  },
+  {
     "name": "sonarr_get_quality_profiles",
     "description": "Get detailed quality profiles from Sonarr. Shows allowed qualities, upgrade settings, and custom format scores.",
     "inputSchema": {
@@ -681,6 +695,20 @@
         }
       },
       "required": ["service", "mediaServer"]
+    }
+  },
+  {
+    "name": "radarr_delete_movie_file",
+    "description": "Permanently delete a movie's file from disk (e.g. a wrongly-matched or corrupt download), without removing the movie entry from Radarr. The movie reverts to missing/monitored so it can be re-grabbed with radarr_search_movie. Use the movie record's movieFile.id (from radarr_get_movies) to find the movieFileId. This cannot be undone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "movieFileId": {
+          "type": "number",
+          "description": "Movie file ID to delete (the movieFile.id field from radarr_get_movies)"
+        }
+      },
+      "required": ["movieFileId"]
     }
   }
 ]

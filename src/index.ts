@@ -341,6 +341,20 @@ if (clients.sonarr) {
       },
     },
     {
+      name: "sonarr_delete_episode_file",
+      description: "Permanently delete a single episode's file from disk (e.g. a wrongly-matched or corrupt download), without removing the series or episode entry from Sonarr. The episode reverts to missing/monitored so it can be re-grabbed with sonarr_search_episode. Use sonarr_get_episodes to find the episodeFileId. This cannot be undone.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          episodeFileId: {
+            type: "number",
+            description: "Episode file ID to delete (the episodeFileId field from sonarr_get_episodes)",
+          },
+        },
+        required: ["episodeFileId"],
+      },
+    },
+    {
       name: "sonarr_refresh_series",
       description: "Trigger a metadata refresh for a specific series in Sonarr",
       inputSchema: {
@@ -591,6 +605,20 @@ if (clients.radarr) {
           },
         },
         required: ["queueId"],
+      },
+    },
+    {
+      name: "radarr_delete_movie_file",
+      description: "Permanently delete a movie's file from disk (e.g. a wrongly-matched or corrupt download), without removing the movie entry from Radarr. The movie reverts to missing/monitored so it can be re-grabbed with radarr_search_movie. Use the movie record's movieFile.id (from radarr_get_movies) to find the movieFileId. This cannot be undone.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          movieFileId: {
+            type: "number",
+            description: "Movie file ID to delete (the movieFile.id field from radarr_get_movies)",
+          },
+        },
+        required: ["movieFileId"],
       },
     },
     {
@@ -1684,6 +1712,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
+      case "sonarr_delete_episode_file": {
+        if (!clients.sonarr) throw new Error("Sonarr not configured");
+        const { episodeFileId } = args as { episodeFileId: number };
+        const file = await clients.sonarr.getEpisodeFile(episodeFileId);
+        const series = await clients.sonarr.getSeriesById(file.seriesId);
+        const episodes = await clients.sonarr.getEpisodes(file.seriesId, file.seasonNumber);
+        const matching = episodes.filter((e) => e.episodeFileId === episodeFileId);
+        await clients.sonarr.deleteEpisodeFile(episodeFileId);
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              message: `Deleted episode file ${episodeFileId} for "${series.title}"`,
+              seriesTitle: series.title,
+              seasonNumber: file.seasonNumber,
+              episodeNumbers: matching.map((e) => e.episodeNumber),
+              path: file.path,
+            }, null, 2),
+          }],
+        };
+      }
+
       case "sonarr_refresh_series": {
         if (!clients.sonarr) throw new Error("Sonarr not configured");
         const seriesId = (args as { seriesId: number }).seriesId;
@@ -1938,6 +1989,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               queueId,
               removedFromClient: removeFromClient,
               blocklisted: blocklist,
+            }, null, 2),
+          }],
+        };
+      }
+
+      case "radarr_delete_movie_file": {
+        if (!clients.radarr) throw new Error("Radarr not configured");
+        const { movieFileId } = args as { movieFileId: number };
+        const file = await clients.radarr.getMovieFile(movieFileId);
+        const movie = await clients.radarr.getMovieById(file.movieId);
+        await clients.radarr.deleteMovieFile(movieFileId);
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              message: `Deleted movie file ${movieFileId} for "${movie.title}" (${movie.year})`,
+              movieTitle: movie.title,
+              year: movie.year,
+              path: file.path,
             }, null, 2),
           }],
         };

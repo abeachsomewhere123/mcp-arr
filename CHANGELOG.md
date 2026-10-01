@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **`sonarr_delete_episode_file` and `radarr_delete_movie_file`.** Permanently delete a single episode/movie file from disk (e.g. a wrongly-matched or corrupt download) without touching the series/movie entry -- the episode/movie reverts to missing/monitored so it can be re-grabbed with the existing search tools. No confirmation prompt inside the tool itself; that's left to the calling agent.
+
 ## [1.7.3] - 2026-07-29
 
 ### Fixed

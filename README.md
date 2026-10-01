@@ -246,6 +246,10 @@ The existing service-specific tools remain available for richer local or power-u
 - "Search for this specific movie"
 - "Grab that album I'm missing"
 
+### Fixing Mismatched or Corrupt Files
+- "Delete this episode's file, it's the wrong version, then search for a replacement"
+- "Remove that movie file and re-grab it"
+
 ### Indexer Management
 - "Are my indexers healthy?"
 - "How are my indexers performing?"
@@ -289,6 +293,7 @@ The existing service-specific tools remain available for richer local or power-u
 | `sonarr_get_episodes` | List episodes for a series (shows missing vs available) |
 | `sonarr_search_missing` | Trigger search for all missing episodes in a series |
 | `sonarr_search_episode` | Trigger search for specific episode(s) |
+| `sonarr_delete_episode_file` | Permanently delete a single episode's file from disk without removing the series/episode entry |
 | `sonarr_refresh_series` | Trigger a metadata refresh for a specific series in Sonarr |
 
 ### Radarr Tools (Movies)
@@ -306,6 +311,7 @@ The existing service-specific tools remain available for richer local or power-u
 | `radarr_search_movies` | Bulk-trigger searches for multiple movie IDs at once |
 | `radarr_update_movie` | Update a movie's quality profile, monitored status, minimum availability, tags, or path |
 | `radarr_delete_queue_item` | Remove an item from the download queue (optionally blocklist the release) |
+| `radarr_delete_movie_file` | Permanently delete a movie's file from disk without removing the movie entry |
 | `radarr_refresh_movie` | Trigger a metadata refresh for a specific movie in Radarr |
 
 ### Lidarr Tools (Music)
@@ -385,6 +391,14 @@ npm run build
 
 # Run locally
 SONARR_URL="http://localhost:8989" SONARR_API_KEY="your-key" node dist/index.js
+```
+
+```bash
+# Manual test against a real/staging Sonarr:
+# 1. Find a disposable episode's episodeFileId via sonarr_get_episodes
+# 2. Call sonarr_delete_episode_file with that ID
+# 3. Confirm in the Sonarr UI: file gone from disk, episode shows "missing"
+# Same pattern for radarr_delete_movie_file / movieFile.id from radarr_get_movies
 ```
 
 ## Troubleshooting

@@ -109,6 +109,17 @@ export interface Episode {
   };
 }
 
+export interface EpisodeFileResource {
+  id: number;
+  seriesId: number;
+  seasonNumber: number;
+  relativePath: string;
+  path: string;
+  size: number;
+  dateAdded: string;
+  quality?: { quality: { id: number; name: string } };
+}
+
 export interface Movie {
   id: number;
   title: string;
@@ -165,6 +176,16 @@ export interface Movie {
       subtitles: string;
     };
   };
+}
+
+export interface MovieFileResource {
+  id: number;
+  movieId: number;
+  relativePath: string;
+  path: string;
+  size: number;
+  dateAdded: string;
+  quality?: { quality: { id: number; name: string; source?: string; resolution?: number } };
 }
 
 export interface Album {
@@ -641,6 +662,24 @@ export class SonarrClient extends ArrClient {
       }),
     });
   }
+
+  /**
+   * Get a specific episode file's details (path, series/season it belongs to)
+   */
+  async getEpisodeFile(episodeFileId: number): Promise<EpisodeFileResource> {
+    return this['request']<EpisodeFileResource>(`/episodefile/${episodeFileId}`);
+  }
+
+  /**
+   * Permanently delete an episode file from disk. Does not touch the
+   * series/episode entry itself -- the episode reverts to missing/monitored
+   * so it can be re-grabbed.
+   */
+  async deleteEpisodeFile(episodeFileId: number): Promise<void> {
+    await this['request']<void>(`/episodefile/${episodeFileId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export class RadarrClient extends ArrClient {
@@ -730,6 +769,24 @@ export class RadarrClient extends ArrClient {
     if (options.blocklist) params.append('blocklist', 'true');
     const query = params.toString() ? `?${params.toString()}` : '';
     await this['request']<void>(`/queue/${queueId}${query}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Get a specific movie file's details (path, the movie it belongs to)
+   */
+  async getMovieFile(movieFileId: number): Promise<MovieFileResource> {
+    return this['request']<MovieFileResource>(`/moviefile/${movieFileId}`);
+  }
+
+  /**
+   * Permanently delete a movie file from disk. Does not touch the movie
+   * entry itself -- the movie reverts to missing/monitored so it can be
+   * re-grabbed.
+   */
+  async deleteMovieFile(movieFileId: number): Promise<void> {
+    await this['request']<void>(`/moviefile/${movieFileId}`, {
       method: 'DELETE',
     });
   }
