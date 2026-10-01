@@ -526,6 +526,24 @@ export class ArrClient {
   }
 
   /**
+   * Get a specific download client by ID
+   */
+  async getDownloadClientById(id: number): Promise<DownloadClient> {
+    return this.request<DownloadClient>(`/downloadclient/${id}`);
+  }
+
+  /**
+   * Update a download client (PUT). Used to change removeCompletedDownloads,
+   * removeFailedDownloads, enable, or priority.
+   */
+  async updateDownloadClient(client: DownloadClient): Promise<DownloadClient> {
+    return this.request<DownloadClient>(`/downloadclient/${client.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(client),
+    });
+  }
+
+  /**
    * Get naming configuration
    */
   async getNamingConfig(): Promise<NamingConfig> {

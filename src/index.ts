@@ -188,6 +188,36 @@ function addConfigTools(serviceName: string, displayName: string) {
       },
     },
     {
+      name: `${serviceName}_update_download_client`,
+      description: `Update a download client's settings in ${displayName} (e.g. toggle removeCompletedDownloads/removeFailedDownloads, enable/disable, change priority). Use ${serviceName}_get_download_clients first to find the client id and confirm which one you're changing.`,
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          id: {
+            type: "number",
+            description: `Download client ID (from ${serviceName}_get_download_clients)`,
+          },
+          enable: {
+            type: "boolean",
+            description: "Whether the client is enabled",
+          },
+          removeCompletedDownloads: {
+            type: "boolean",
+            description: "Remove completed downloads from the download client after import",
+          },
+          removeFailedDownloads: {
+            type: "boolean",
+            description: "Remove failed downloads from the download client",
+          },
+          priority: {
+            type: "number",
+            description: "Client priority (lower number = higher priority)",
+          },
+        },
+        required: ["id"],
+      },
+    },
+    {
       name: `${serviceName}_get_naming`,
       description: `Get file naming configuration from ${displayName}. Shows naming patterns for files and folders.`,
       inputSchema: {
@@ -1430,6 +1460,42 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 removeFailedDownloads: c.removeFailedDownloads,
                 tags: c.tags,
               })),
+            }, null, 2),
+          }],
+        };
+      }
+
+      case "sonarr_update_download_client":
+      case "radarr_update_download_client":
+      case "lidarr_update_download_client": {
+        const serviceName = name.split('_')[0] as keyof typeof clients;
+        const client = clients[serviceName];
+        if (!client) throw new Error(`${serviceName} not configured`);
+        const { id, enable, removeCompletedDownloads, removeFailedDownloads, priority } = args as {
+          id: number; enable?: boolean; removeCompletedDownloads?: boolean;
+          removeFailedDownloads?: boolean; priority?: number;
+        };
+        const downloadClient = await client.getDownloadClientById(id);
+        if (enable !== undefined) downloadClient.enable = enable;
+        if (removeCompletedDownloads !== undefined) downloadClient.removeCompletedDownloads = removeCompletedDownloads;
+        if (removeFailedDownloads !== undefined) downloadClient.removeFailedDownloads = removeFailedDownloads;
+        if (priority !== undefined) downloadClient.priority = priority;
+        const updated = await client.updateDownloadClient(downloadClient);
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              message: `Updated download client "${updated.name}"`,
+              client: {
+                id: updated.id,
+                name: updated.name,
+                implementation: updated.implementationName,
+                enabled: updated.enable,
+                priority: updated.priority,
+                removeCompletedDownloads: updated.removeCompletedDownloads,
+                removeFailedDownloads: updated.removeFailedDownloads,
+              },
             }, null, 2),
           }],
         };
