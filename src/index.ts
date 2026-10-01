@@ -1674,6 +1674,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 airDate: e.airDate,
                 hasFile: e.hasFile,
                 monitored: e.monitored,
+                ...(e.episodeFileId ? { episodeFileId: e.episodeFileId } : {}),
               })),
             }, null, 2),
           }],
@@ -1822,6 +1823,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 studio: m.studio,
                 qualityProfileId: m.qualityProfileId,
                 ...(m.movieFile ? {
+                  movieFileId: m.movieFile.id,
                   quality: m.movieFile.quality?.quality?.name ?? null,
                   resolution: m.movieFile.mediaInfo?.resolution ?? null,
                   videoCodec: m.movieFile.mediaInfo?.videoCodec ?? null,
