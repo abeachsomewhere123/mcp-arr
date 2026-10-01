@@ -698,6 +698,19 @@ export class SonarrClient extends ArrClient {
       method: 'DELETE',
     });
   }
+
+  /**
+   * Delete an item from the download queue
+   */
+  async deleteQueueItem(queueId: number, options: { removeFromClient?: boolean; blocklist?: boolean } = {}): Promise<void> {
+    const params = new URLSearchParams();
+    if (options.removeFromClient) params.append('removeFromClient', 'true');
+    if (options.blocklist) params.append('blocklist', 'true');
+    const query = params.toString() ? `?${params.toString()}` : '';
+    await this['request']<void>(`/queue/${queueId}${query}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export class RadarrClient extends ArrClient {

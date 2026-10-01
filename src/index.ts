@@ -310,6 +310,28 @@ if (clients.sonarr) {
       },
     },
     {
+      name: "sonarr_delete_queue_item",
+      description: "Remove an item from the Sonarr download queue. Use sonarr_get_queue to find queue item IDs. Can optionally blocklist the release to prevent re-grabbing.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          queueId: {
+            type: "number",
+            description: "Queue item ID (from sonarr_get_queue)",
+          },
+          removeFromClient: {
+            type: "boolean",
+            description: "Also remove from download client (default: true)",
+          },
+          blocklist: {
+            type: "boolean",
+            description: "Add release to blocklist to prevent re-grabbing (default: false)",
+          },
+        },
+        required: ["queueId"],
+      },
+    },
+    {
       name: "sonarr_get_calendar",
       description: "Get upcoming TV episodes from Sonarr",
       inputSchema: {
@@ -1710,6 +1732,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "sonarr_get_queue": {
         if (!clients.sonarr) throw new Error("Sonarr not configured");
         return jsonText(await getPaginatedQueue(clients.sonarr, args as { limit?: number; offset?: number }));
+      }
+
+      case "sonarr_delete_queue_item": {
+        if (!clients.sonarr) throw new Error("Sonarr not configured");
+        const { queueId, removeFromClient = true, blocklist = false } = args as {
+          queueId: number; removeFromClient?: boolean; blocklist?: boolean;
+        };
+        await clients.sonarr.deleteQueueItem(queueId, { removeFromClient, blocklist });
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              message: `Removed queue item ${queueId}${blocklist ? ' and added to blocklist' : ''}`,
+              queueId,
+              removedFromClient: removeFromClient,
+              blocklisted: blocklist,
+            }, null, 2),
+          }],
+        };
       }
 
       case "sonarr_get_calendar": {
